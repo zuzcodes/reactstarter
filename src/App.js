@@ -1,19 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import Nav from "./Nav";
 import ProductList from "./ProductList";
 import Basket from "./Basket";
+import { perPage } from "./config";
 
 function App() {
+  const myEl = useRef(null);
   const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState("Search");
   const [basket, setBasket] = useState([]);
   const [sortKey, setSortKey] = useState("price");
+  const [start, setStart] = useState(0);
 
   useEffect(() => {
-    fetch("https://kea-alt-del.dk/t7/api/products?limit=50")
+    fetch(`https://kea-alt-del.dk/t7/api/products?limit=${perPage}&start=${start}`)
       .then((res) => res.json())
       .then(setProducts);
-  }, []);
+  }, [start]);
 
   function addToBasket(payload) {
     const inBasket = basket.findIndex((item) => item.id === payload.id);
@@ -46,11 +50,29 @@ function App() {
     return 0;
   });
 
+  function updateStart() {
+    setStart((prevState) => prevState + perPage);
+  }
+
   return (
     <div className="App">
-      <button onClick={() => addToBasket({ data: true })}>Test</button>
-      <button onClick={() => setSortKey("productdisplayname")}>Sort By Name</button>
-      <button onClick={() => setSortKey("price")}>Sort By Price</button>
+      <div>
+        <h1>Searching for {search}</h1>
+        <input
+          type="search"
+          name="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button ref={myEl} onClick={updateStart}>
+          Next
+        </button>
+        <button onClick={() => addToBasket({ data: true })}>Test</button>
+        <button onClick={() => setSortKey("productdisplayname")}>
+          Sort By Name
+        </button>
+        <button onClick={() => setSortKey("price")}>Sort By Price</button>
+      </div>
       <Nav />
       <ProductList product={copy} addToBasket={addToBasket} />
       <Basket basket={basket} />
